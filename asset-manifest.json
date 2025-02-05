@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/KaiyoUren/static/css/main.53aa6765.css",
-    "main.js": "/KaiyoUren/static/js/main.caa42177.js",
+    "main.js": "/KaiyoUren/static/js/main.b5202d60.js",
     "index.html": "/KaiyoUren/index.html",
     "main.53aa6765.css.map": "/KaiyoUren/static/css/main.53aa6765.css.map",
-    "main.caa42177.js.map": "/KaiyoUren/static/js/main.caa42177.js.map"
+    "main.b5202d60.js.map": "/KaiyoUren/static/js/main.b5202d60.js.map"
   },
   "entrypoints": [
     "static/css/main.53aa6765.css",
-    "static/js/main.caa42177.js"
+    "static/js/main.b5202d60.js"
   ]
 }
