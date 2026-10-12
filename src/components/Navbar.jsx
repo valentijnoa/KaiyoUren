@@ -18,6 +18,14 @@ const Navbar = () => {
           Uren Registratie
         </NavLink>
         <NavLink
+          to="/planning"
+          className={({ isActive }) =>
+            `nav-link ${isActive ? "active-nav-link" : ""}`
+          }
+        >
+          Weekplanning
+        </NavLink>
+        <NavLink
           to="/employees"
           className={({ isActive }) =>
             `nav-link ${isActive ? "active-nav-link" : ""}`

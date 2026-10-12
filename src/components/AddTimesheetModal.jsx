@@ -1,99 +1,93 @@
 import { useState, useEffect } from "react";
 import { collection, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { format, isAfter, startOfToday } from "date-fns";
+import { format, startOfToday, startOfDay } from "date-fns";
+import { calculateTotalHours, parseLocalDate } from "../utils/hours";
+
+const EMPTY_FORM = {
+  date: "",
+  employeeId: "",
+  startTime: "16:00",
+  endTime: "17:30",
+};
 
 const AddTimesheetModal = ({ show, onClose, initialData, employees }) => {
-  const [formData, setFormData] = useState({
-    date: "",
-    employeeId: "",
-    startTime: "09:00",
-    endTime: "17:30",
-  });
-
-  const [dateError, setDateError] = useState("");
-
-  const validateDate = (dateString) => {
-    const selectedDate = new Date(dateString);
-    const today = new Date();
-
-    // Reset time components for accurate comparison
-    const selectedDay = new Date(
-      selectedDate.getFullYear(),
-      selectedDate.getMonth(),
-      selectedDate.getDate()
-    );
-
-    const todayDay = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-
-    if (selectedDay > todayDay) {
-      setDateError("Cannot add hours for future dates");
-      return false;
-    }
-
-    setDateError("");
-    return true;
-  };
+  const [formData, setFormData] = useState(EMPTY_FORM);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (initialData) {
       setFormData({
         date: format(initialData.date, "yyyy-MM-dd"),
-        employeeId: initialData.employeeId,
-        startTime: initialData.startTime,
-        endTime: initialData.endTime,
+        employeeId: initialData.employeeId || "",
+        startTime: initialData.startTime || "16:00",
+        endTime: initialData.endTime || "17:30",
       });
+      setError("");
     }
   }, [initialData]);
 
-  const calculateTotalHours = () => {
-    const [startH, startM] = formData.startTime.split(":").map(Number);
-    const [endH, endM] = formData.endTime.split(":").map(Number);
-    return endH - startH + (endM - startM) / 60;
+  const total = calculateTotalHours(formData.startTime, formData.endTime);
+
+  const validate = () => {
+    if (!formData.date) return "Kies een datum";
+    if (startOfDay(parseLocalDate(formData.date)) > startOfToday())
+      return "Je kunt geen uren toevoegen voor toekomstige datums";
+    if (!formData.employeeId) return "Kies een medewerker";
+    if (total <= 0)
+      return "De eindtijd moet na de starttijd liggen";
+    return "";
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!validateDate(formData.date)) return;
+    const message = validate();
+    if (message) {
+      setError(message);
+      return;
+    }
+    setSaving(true);
     try {
       const docId = initialData?.id || doc(collection(db, "timesheets")).id;
-
       await setDoc(
         doc(db, "timesheets", docId),
         {
-          ...formData,
-          date: new Date(formData.date),
-          totalHours: calculateTotalHours(formData),
           employeeId: formData.employeeId,
+          date: parseLocalDate(formData.date),
+          startTime: formData.startTime,
+          endTime: formData.endTime,
+          totalHours: total,
         },
         { merge: true }
       );
-
       onClose();
-    } catch (error) {
-      console.error("Error saving timesheet: ", error);
+    } catch (err) {
+      console.error("Error saving timesheet: ", err);
+      setError("Opslaan mislukt. Probeer het opnieuw.");
+    } finally {
+      setSaving(false);
     }
   };
 
   const handleDelete = async () => {
     if (!initialData?.id) return;
-
     try {
       await deleteDoc(doc(db, "timesheets", initialData.id));
       onClose();
-    } catch (error) {
-      console.error("Error deleting entry: ", error);
+    } catch (err) {
+      console.error("Error deleting entry: ", err);
+      setError("Verwijderen mislukt. Probeer het opnieuw.");
     }
   };
 
   if (!show) return null;
 
+  const set = (field) => (e) =>
+    setFormData({ ...formData, [field]: e.target.value });
+
   return (
-    <div className={`modal-overlay ${show ? "show" : ""}`}>
+    <div className="modal-overlay show">
       <div className="modal-content">
         <h2>{initialData?.id ? "Uren Bewerken" : "Uren Toevoegen"}</h2>
         <form onSubmit={handleSubmit}>
@@ -102,23 +96,17 @@ const AddTimesheetModal = ({ show, onClose, initialData, employees }) => {
             <input
               type="date"
               value={formData.date}
-              max={format(new Date(), "yyyy-MM-dd")} // Restrict calendar picker
-              onChange={(e) => {
-                setFormData({ ...formData, date: e.target.value });
-                validateDate(e.target.value);
-              }}
+              max={format(new Date(), "yyyy-MM-dd")}
+              onChange={set("date")}
               required
             />
-            {dateError && <div className="error-message">{dateError}</div>}
           </div>
 
           <div className="form-group">
             <label>Medewerker:</label>
             <select
               value={formData.employeeId}
-              onChange={(e) =>
-                setFormData({ ...formData, employeeId: e.target.value })
-              }
+              onChange={set("employeeId")}
               disabled={!!initialData?.id}
               required
             >
@@ -137,25 +125,26 @@ const AddTimesheetModal = ({ show, onClose, initialData, employees }) => {
               <input
                 type="time"
                 value={formData.startTime}
-                onChange={(e) =>
-                  setFormData({ ...formData, startTime: e.target.value })
-                }
+                onChange={set("startTime")}
                 required
               />
             </div>
-
             <div className="form-group">
               <label>Eind Tijd:</label>
               <input
                 type="time"
                 value={formData.endTime}
-                onChange={(e) =>
-                  setFormData({ ...formData, endTime: e.target.value })
-                }
+                onChange={set("endTime")}
                 required
               />
             </div>
           </div>
+
+          <p className="total-preview">
+            Totaal: <strong>{total > 0 ? `${total}`.replace(".", ",") : "0"} uur</strong>
+          </p>
+
+          {error && <div className="error-message">{error}</div>}
 
           <div className="modal-actions">
             {initialData?.id && (
@@ -175,7 +164,9 @@ const AddTimesheetModal = ({ show, onClose, initialData, employees }) => {
                 Verwijderen
               </button>
             )}
-            <button type="submit">Opslaan</button>
+            <button type="submit" disabled={saving}>
+              Opslaan
+            </button>
             <button type="button" onClick={onClose}>
               Annuleren
             </button>

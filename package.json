@@ -1,13 +1,14 @@
 {
   "name": "kaiyo-hours",
   "version": "0.1.0",
-  "homepage": "https://gitname.github.io/KaiyoUren",
+  "homepage": "https://valentijnoa.github.io/KaiyoUren",
   "private": true,
   "dependencies": {
-    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "cra-template": "1.2.0",
     "date-fns": "^4.1.0",
     "firebase": "^11.2.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
     "react": "^19.0.0",
     "react-datepicker": "^8.0.0",
     "react-dom": "^19.0.0",

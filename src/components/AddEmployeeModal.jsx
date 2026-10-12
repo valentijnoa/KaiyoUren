@@ -2,18 +2,30 @@ import { useState } from "react";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../firebase";
 
-const AddEmployeeModal = ({ show, onClose }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-  });
+const AddEmployeeModal = ({ show, onClose, employees = [] }) => {
+  const [name, setName] = useState("");
+  const [error, setError] = useState("");
+
+  const close = () => {
+    setName("");
+    setError("");
+    onClose();
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (employees.some((emp) => emp.name?.toLowerCase() === trimmed.toLowerCase())) {
+      setError("Er bestaat al een werknemer met deze naam");
+      return;
+    }
     try {
-      await addDoc(collection(db, "employees"), formData);
-      onClose();
-    } catch (error) {
-      console.error("Error adding employee: ", error);
+      await addDoc(collection(db, "employees"), { name: trimmed });
+      close();
+    } catch (err) {
+      console.error("Error adding employee: ", err);
+      setError("Toevoegen mislukt. Probeer het opnieuw.");
     }
   };
 
@@ -22,24 +34,23 @@ const AddEmployeeModal = ({ show, onClose }) => {
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h2>Add New Employee</h2>
+        <h2>Werknemer Toevoegen</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Full Name:</label>
+            <label>Volledige naam:</label>
             <input
               type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
               required
             />
           </div>
-
+          {error && <div className="error-message">{error}</div>}
           <div className="modal-actions">
-            <button type="submit">Add Employee</button>
-            <button type="button" onClick={onClose}>
-              Cancel
+            <button type="submit">Toevoegen</button>
+            <button type="button" onClick={close}>
+              Annuleren
             </button>
           </div>
         </form>

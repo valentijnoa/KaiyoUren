@@ -432,3 +432,100 @@ input[type="date"]:invalid {
 .employee-item span {
   margin-right: 20px;
 }
+
+/* --- Toegevoegd: vandaag, scroll, lege staat --- */
+.grid-scroll {
+  overflow-x: auto;
+}
+
+.header-cell.today {
+  background: #cf2f1c;
+  color: #fff;
+}
+
+.totals-row .employee-cell,
+.totals-row .total-cell {
+  background: #fdf1f1;
+  font-weight: 600;
+}
+
+.total-cell.grand-total {
+  background: #f6d5d0;
+}
+
+.total-preview {
+  margin: 0 0 10px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #848d96;
+  padding: 24px;
+}
+
+/* --- Weekplanning --- */
+.planner-grid {
+  display: grid;
+  grid-template-columns: 180px repeat(7, minmax(90px, 1fr));
+  gap: 1px;
+  background: #ddd;
+  min-width: 760px;
+}
+.planner-row { display: contents; }
+.planner-cell {
+  background: #fff;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.planner-cell input[type="time"] { width: 100%; box-sizing: border-box; }
+.planner-cell.planned { background: #e6f4ea; }
+.planner-cell.invalid { background: #fdecea; }
+.week-selector { display: flex; align-items: center; gap: 8px; }
+.message-preview { margin-top: 16px; }
+.message-preview pre { white-space: pre-wrap; background: #f8f9fa; padding: 12px; border-radius: 5px; }
+
+/* --- Uren-grid past op het scherm (geen horizontale scrollbalk) --- */
+.grid-fit { width: 100%; }
+.grid-fit .timesheet-grid { width: 100%; }
+.grid-fit .header-cell,
+.grid-fit .hours-cell,
+.grid-fit .employee-cell,
+.grid-fit .total-cell {
+  min-width: 0;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  overflow: hidden;
+}
+.grid-fit .header-cell { margin-left: 0; margin-right: 0; }
+.grid-fit .employee-cell {
+  padding: 6px 8px;
+  text-align: left;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.grid-fit .empty-cell .plus-icon { font-size: 1rem; }
+
+/* --- Afwisselende rijkleuren --- */
+.employee-row:not(.alt) > .employee-cell,
+.employee-row:not(.alt) > .total-cell,
+.employee-row:not(.alt) > .hours-cell:not(.filled-cell) {
+  background-color: #fff !important;
+}
+.employee-row.alt > .employee-cell,
+.employee-row.alt > .total-cell,
+.employee-row.alt > .hours-cell:not(.filled-cell),
+.planner-row.alt > .employee-cell,
+.planner-row.alt > .planner-cell:not(.planned) {
+  background-color: #eef1f6 !important;
+}
+.employee-row > .clickable-cell:not(.filled-cell):hover {
+  background-color: #dbdbdb !important;
+}
+
+/* --- Header breekt af op smalle schermen zodat knoppen nooit buiten beeld vallen --- */
+.header { flex-wrap: wrap; gap: 10px; padding-top: 8px; padding-bottom: 8px; }
+.controls { flex-wrap: wrap; align-items: center; gap: 10px; }
+.button-group { flex-wrap: wrap; }
+.employee-list-header { display: flex; justify-content: space-between; align-items: center; }

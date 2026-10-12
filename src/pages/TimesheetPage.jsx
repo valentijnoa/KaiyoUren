@@ -4,19 +4,19 @@ import MonthSelector from "../components/MonthSelector";
 import TimesheetGrid from "../components/TimesheetGrid";
 import AddTimesheetModal from "../components/AddTimesheetModal";
 import AddEmployeeModal from "../components/AddEmployeeModal";
+import { exportMonthPdf } from "../utils/exportPdf";
 
 const TimesheetPage = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showTimesheetModal, setShowTimesheetModal] = useState(false);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
-  const { employees, timesheets } = useTimesheets(selectedDate);
+  const { employees, timesheets, error } = useTimesheets(selectedDate);
   const [editingEntry, setEditingEntry] = useState(null);
 
   const handleAddEntry = () => {
     setEditingEntry({
       date: new Date(),
       employeeId: "",
-      startTime: "09:00",
+      startTime: "16:00",
       endTime: "17:30",
     });
   };
@@ -32,6 +32,12 @@ const TimesheetPage = () => {
             <button onClick={() => setShowEmployeeModal(true)}>
               Werknemer Toevoegen
             </button>
+            <button
+              onClick={() => exportMonthPdf(employees, timesheets, selectedDate)}
+              disabled={employees.length === 0}
+            >
+              Exporteer PDF
+            </button>
           </div>
         </div>
       </div>
@@ -39,7 +45,10 @@ const TimesheetPage = () => {
       <AddEmployeeModal
         show={showEmployeeModal}
         onClose={() => setShowEmployeeModal(false)}
+        employees={employees}
       />
+
+      {error && <div className="error-message">{error}</div>}
 
       <TimesheetGrid
         employees={employees}
